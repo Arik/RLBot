@@ -406,7 +406,7 @@ class SetupManager:
         expected_metadata_calls = sum(1 for player in self.match_config.player_configs if player.rlbot_controlled)
         return self.num_metadata_received >= expected_metadata_calls
 
-    def launch_early_start_bot_processes(self, match_config: MatchConfig = None):
+    def launch_early_start_bot_processes(self, match_config: MatchConfig = None, extra_script_argv: dict = None):
         """
         Some bots can start up before the game is ready and not be bothered by missing
         or strange looking values in the game tick packet, etc. Such bots can opt in to the
@@ -420,7 +420,7 @@ class SetupManager:
             return  # The bot indices are liable to change, so don't start anything yet.
 
         self.logger.debug("Launching early-start bot processes")
-        num_started = self.launch_bot_process_helper(early_starters_only=True, match_config=match_config or self.match_config)
+        num_started = self.launch_bot_process_helper(early_starters_only=True, match_config=match_config or self.match_config, extra_script_argv=extra_script_argv)
         self.try_recieve_agent_metadata()
         if num_started > 0 and self.early_start_seconds > 0:
             self.logger.info(f"Waiting for {self.early_start_seconds} seconds to let early-start bots load.")
@@ -429,11 +429,11 @@ class SetupManager:
                 self.try_recieve_agent_metadata()
                 time.sleep(0.1)
 
-    def launch_bot_processes(self, match_config: MatchConfig = None):
+    def launch_bot_processes(self, match_config: MatchConfig = None, extra_script_argv: dict = None):
         self.logger.debug("Launching bot processes")
-        self.launch_bot_process_helper(early_starters_only=False, match_config=match_config or self.match_config)
+        self.launch_bot_process_helper(early_starters_only=False, match_config=match_config or self.match_config, extra_script_argv=extra_script_argv)
 
-    def launch_bot_process_helper(self, early_starters_only=False, match_config: MatchConfig = None):
+    def launch_bot_process_helper(self, early_starters_only=False, match_config: MatchConfig = None, extra_script_argv: dict = None):
         # Start matchcomms here as it's only required for the bots.
         if not self.matchcomms_server:
             self.matchcomms_server = launch_matchcomms_server()
@@ -524,12 +524,16 @@ class SetupManager:
             if script_config_bundle.use_virtual_environment:
                 executable = str(Path(script_config_bundle.config_directory) / 'venv' / 'Scripts' / 'python.exe')
 
-            process = subprocess.Popen(
-                [
+            popen_args = [
                     executable,
-                    script_config_bundle.script_file, 
-                    '--matchcomms-url', self.matchcomms_server.root_url.geturl()
-                ],
+                    script_config_bundle.script_file,
+                    '--matchcomms-url', self.matchcomms_server.root_url.geturl(),
+                ]
+            for key in extra_script_argv:
+                popen_args.extend(['--'+key, extra_script_argv[key]])
+
+            process = subprocess.Popen(
+                popen_args,
                 cwd=Path(script_config_bundle.config_directory).parent
             )
             self.logger.info(f"Started script with pid {process.pid} using {process.args}")
