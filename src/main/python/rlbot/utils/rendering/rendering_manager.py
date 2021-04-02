@@ -27,6 +27,8 @@ class RenderingManager:
         self.bot_team = 0
         self.group_id: Optional[str] = None
         self.touched_group_ids: Set[str] = set()
+        self.whitelisted_group_ids: Set[str] = set()
+        self.blacklisted_group_ids: Set[str] = set()
 
         self.native_constructor = None
         self.native_destructor = None
@@ -76,14 +78,23 @@ class RenderingManager:
         if rlbot_status != RLBotCoreStatus.Success:
             get_logger("Renderer").error("bad status %s", RLBotCoreStatus.status_list[rlbot_status])
 
-    def begin_rendering(self, group_id: str=DEFAULT_GROUP_ID):
-        self.touched_group_ids.add(group_id)
-        self.group_id = group_id
-        self.render_list = []
-        self.render_state = True
+    def is_rendering_blocked(self):
+        if len(self.whitelisted_group_ids) > 0 and self.group_id not in self.whitelisted_group_ids:
+            return True
+        if self.group_id in self.blacklisted_group_ids:
+            return True
+        return False
 
+    def begin_rendering(self, group_id: str=DEFAULT_GROUP_ID):
+        self.group_id = group_id
         if self.group_id is None:
             self.group_id = DEFAULT_GROUP_ID
+        if self.is_rendering_blocked():
+            return
+
+        self.touched_group_ids.add(group_id)
+        self.render_list = []
+        self.render_state = True
 
         group_id = str(self.bot_index) + str(self.group_id)
         group_id_hashed = int(hashlib.sha256(str(group_id).encode('utf-8')).hexdigest(), 16) % MAX_INT
@@ -94,8 +105,9 @@ class RenderingManager:
 
         self.builder = self.native_constructor(group_id_hashed)
 
-
     def end_rendering(self):
+        if self.is_rendering_blocked():
+            return
         if self.builder is not None:
             self.native_finish_and_send(self.builder)
             self.native_destructor(self.builder)
@@ -131,6 +143,8 @@ class RenderingManager:
         return self
 
     def draw_line_3d(self, vec1, vec2, color):
+        if self.is_rendering_blocked():
+            return self
         if self.builder is None:
             get_logger("Renderer").error("Use begin_rendering before using any of the drawing functions!")
             return self
@@ -139,6 +153,8 @@ class RenderingManager:
         return self
 
     def draw_polyline_3d(self, vectors, color):
+        if self.is_rendering_blocked():
+            return self
         if len(vectors) < 2:
             get_logger("Renderer").error("draw_polyline_3d requires atleast 2 vectors!")
             return self
@@ -158,6 +174,8 @@ class RenderingManager:
         return self
 
     def draw_rect_2d(self, x, y, width, height, filled, color):
+        if self.is_rendering_blocked():
+            return self
         if self.builder is None:
             get_logger("Renderer").error("Use begin_rendering before using any of the drawing functions!")
             return self
@@ -165,6 +183,8 @@ class RenderingManager:
         return self
 
     def draw_rect_3d(self, vec, width, height, filled, color, centered=False):
+        if self.is_rendering_blocked():
+            return self
         if self.builder is None:
             get_logger("Renderer").error("Use begin_rendering before using any of the drawing functions!")
             return self
@@ -172,6 +192,8 @@ class RenderingManager:
         return self
 
     def draw_string_2d(self, x, y, scale_x, scale_y, text, color):
+        if self.is_rendering_blocked():
+            return self
         if self.builder is None:
             get_logger("Renderer").error("Use begin_rendering before using any of the drawing functions!")
             return self
@@ -179,6 +201,8 @@ class RenderingManager:
         return self
 
     def draw_string_3d(self, vec, scale_x, scale_y, text, color):
+        if self.is_rendering_blocked():
+            return self
         if self.builder is None:
             get_logger("Renderer").error("Use begin_rendering before using any of the drawing functions!")
             return self

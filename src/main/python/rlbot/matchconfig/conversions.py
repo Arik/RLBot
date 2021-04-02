@@ -8,6 +8,7 @@ from rlbot.parsing.bot_config_bundle import BotConfigBundle, get_bot_config_bund
 from rlbot.parsing.custom_config import ConfigObject
 from rlbot.parsing.incrementing_integer import IncrementingInteger
 from rlbot.parsing.match_settings_config_parser import get_num_players, parse_match_settings
+from rlbot.parsing.rendering_group_id_management_config_parser import get_rendering_whitelist, get_rendering_blacklist
 from rlbot.parsing.rlbot_config_parser import create_bot_config_layout, NETWORKING_ROLE_KEY, NETWORK_ADDRESS_KEY
 from rlbot.parsing.rlbot_config_parser import RLBOT_CONFIGURATION_HEADER, EXTENSION_PATH_KEY
 
@@ -65,6 +66,9 @@ def parse_match_config(config_parser: ConfigObject, config_location, config_bund
 
     match_config.script_configs = [ScriptConfig(bundle.config_path)
                                    for bundle in get_script_config_bundles(config_parser, config_location)]
+
+    match_config.rendering_whitelist = get_rendering_whitelist(config_parser)
+    match_config.rendering_blacklist = get_rendering_blacklist(config_parser)
 
     return match_config
 

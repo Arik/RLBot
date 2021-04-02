@@ -254,6 +254,8 @@ class MatchConfig:
         self.enable_state_setting: bool = False
         self.auto_save_replay: bool = False
         self.script_configs: List[ScriptConfig] = []
+        self.rendering_whitelist: List[str] = []
+        self.rendering_blacklist: List[str] = []
         self.logger = get_logger('match_config')
 
     @property

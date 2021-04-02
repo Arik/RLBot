@@ -343,6 +343,9 @@ class SetupManager:
                 builder = EnvBuilderWithRequirements(bundle=script_config_bundle, do_post_setup=do_post_setup)
                 builder.create(Path(script_config_bundle.config_directory) / 'venv')
 
+        self.game_interface.renderer.whitelisted_group_ids.update(match_config.rendering_whitelist)
+        self.game_interface.renderer.blacklisted_group_ids.update(match_config.rendering_blacklist)
+
         self.match_config = match_config
         self.game_interface.match_config = match_config
         self.game_interface.start_match_flatbuffer = match_config.create_flatbuffer()
