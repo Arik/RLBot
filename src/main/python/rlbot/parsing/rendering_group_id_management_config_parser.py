@@ -7,7 +7,7 @@ WHITELIST_GROUP_ID_KEY = "whitelist_id"
 BLACKLIST_GROUP_ID_KEY = "blacklist_id"
 
 
-def add_scripts_header(config_object):
+def add_rendering_group_id_management_header(config_object):
     participant_header = config_object.add_header_name(RENDERING_GROUP_ID_MANAGEMENT_CONFIGURATION_HEADER,
                                                        is_indexed=True)
     participant_header.add_value(WHITELIST_GROUP_ID_KEY, str, default=None,

@@ -188,6 +188,9 @@ class BotManager:
             match_settings = self.game_interface.get_match_settings()
             self.match_config = MatchConfig.from_match_settings_flatbuffer(match_settings)
 
+        self.game_interface.renderer.whitelisted_group_ids.update(self.match_config.rendering_whitelist)
+        self.game_interface.renderer.blacklisted_group_ids.update(self.match_config.rendering_blacklist)
+
         last_tick_game_time = 0  # What the tick time of the last observed tick was
         last_call_real_time = datetime.now()  # When we last called the Agent
         frame_urgency = 0  # If the bot is getting called more than its preferred max rate, urgency will go negative.
