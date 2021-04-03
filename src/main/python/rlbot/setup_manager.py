@@ -524,13 +524,11 @@ class SetupManager:
             if script_config_bundle.use_virtual_environment:
                 executable = str(Path(script_config_bundle.config_directory) / 'venv' / 'Scripts' / 'python.exe')
 
-            popen_args = [
-                    executable,
-                    script_config_bundle.script_file,
-                    '--matchcomms-url', self.matchcomms_server.root_url.geturl(),
-                ]
+            popen_args = [executable,
+                          script_config_bundle.script_file,
+                          '--matchcomms-url', self.matchcomms_server.root_url.geturl()]
             for key in extra_script_argv:
-                popen_args.extend(['--'+key, extra_script_argv[key]])
+                popen_args.extend([key, extra_script_argv[key]])
 
             process = subprocess.Popen(
                 popen_args,
